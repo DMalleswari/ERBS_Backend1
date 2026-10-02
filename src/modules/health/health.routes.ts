@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { asyncHandler } from "../../middleware";
 import { healthController } from "./health.controller";
 
 /**
@@ -39,6 +40,11 @@ import { healthController } from "./health.controller";
  */
 const healthRoutes = Router();
 
-healthRoutes.get("/", (req, res) => healthController.check(req, res));
+healthRoutes.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    healthController.check(req, res);
+  }),
+);
 
 export { healthRoutes };
