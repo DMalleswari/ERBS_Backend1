@@ -17,6 +17,15 @@ function parseSection(schema: ZodType, value: unknown, label: string): unknown {
   return result.data;
 }
 
+function replaceRequestValue(req: Request, key: "query" | "params", value: unknown): void {
+  Object.defineProperty(req, key, {
+    value,
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
+}
+
 export function validate(schemas: RequestSchemas) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
@@ -24,10 +33,10 @@ export function validate(schemas: RequestSchemas) {
         req.body = parseSection(schemas.body, req.body, "Body");
       }
       if (schemas.query) {
-        req.query = parseSection(schemas.query, req.query, "Query") as Request["query"];
+        replaceRequestValue(req, "query", parseSection(schemas.query, req.query, "Query"));
       }
       if (schemas.params) {
-        req.params = parseSection(schemas.params, req.params, "Params") as Request["params"];
+        replaceRequestValue(req, "params", parseSection(schemas.params, req.params, "Params"));
       }
       next();
     } catch (error) {

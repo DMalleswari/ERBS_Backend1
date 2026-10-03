@@ -1,1 +1,7 @@
-export { formatZodError, idParamSchema, paginationQuerySchema } from "./zod";
+export {
+  formatZodError,
+  idParamSchema,
+  paginationQuerySchema,
+  passwordSchema,
+  strongPasswordSchema,
+} from "./zod";

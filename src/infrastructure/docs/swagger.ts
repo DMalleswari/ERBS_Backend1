@@ -20,7 +20,24 @@ const options: swaggerJsdoc.Options = {
         name: "Health",
         description: "Service health checks",
       },
+      {
+        name: "Auth",
+        description: "Register and login",
+      },
+      {
+        name: "Users",
+        description: "User records",
+      },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
   },
   apis: ["./src/modules/**/*.routes.ts", "./dist/modules/**/*.routes.js"],
 };

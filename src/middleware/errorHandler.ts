@@ -50,6 +50,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   }
 
   const message = err instanceof Error ? err.message : "Unknown error";
+  const isPrismaError = err instanceof Error && err.name.startsWith("Prisma");
   logger.error("Unhandled error", {
     message,
     method: req.method,
@@ -60,6 +61,6 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   sendError(
     res,
     500,
-    env.NODE_ENV === "production" ? "Internal server error" : message,
+    env.NODE_ENV === "production" || isPrismaError ? "Internal server error" : message,
   );
 }
