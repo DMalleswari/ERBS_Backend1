@@ -1,6 +1,7 @@
 import { hashPassword } from "../../infrastructure/security";
 import { AppError } from "../../shared/errors";
 import { pageMeta, pageSkip } from "../../shared/utils";
+import { auditLogService } from "../audit-logs/audit-logs.service";
 import { toUserDto } from "./users.mapper";
 import { PrismaUserRepository, type UserRepository } from "./users.repository";
 import type { CreateUserInput, UpdateUserInput, UserListQuery } from "./users.schema";
@@ -9,20 +10,25 @@ import type { UserDto, UserRecord } from "./users.types";
 export class UsersService {
   constructor(private readonly users: UserRepository) {}
 
-  async create(input: CreateUserInput): Promise<UserDto> {
+  async create(input: CreateUserInput, actorId?: string): Promise<UserDto> {
     const existing = await this.users.findByEmail(input.email);
     if (existing) {
       throw new AppError("Email already exists", 409);
     }
 
     const passwordHash = await hashPassword(input.password);
-    return toUserDto(
-      await this.users.create({
-        name: input.name,
-        email: input.email,
-        passwordHash,
-      }),
-    );
+    const created = await this.users.create({
+      name: input.name,
+      email: input.email,
+      passwordHash,
+    });
+    await auditLogService.record({
+      actorId: actorId ?? created.id,
+      action: "USER_CREATED",
+      entity: "User",
+      entityId: created.id,
+    });
+    return toUserDto(created);
   }
 
   async list(query: UserListQuery): Promise<{ items: UserDto[]; meta: ReturnType<typeof pageMeta> }> {
@@ -44,7 +50,7 @@ export class UsersService {
     return toUserDto(await this.requireUser(id));
   }
 
-  async update(id: string, input: UpdateUserInput): Promise<UserDto> {
+  async update(id: string, input: UpdateUserInput, actorId: string): Promise<UserDto> {
     await this.requireUser(id);
 
     if (input.email !== undefined) {
@@ -54,12 +60,25 @@ export class UsersService {
       }
     }
 
-    return toUserDto(await this.users.update(id, input));
+    const updated = toUserDto(await this.users.update(id, input));
+    await auditLogService.record({
+      actorId,
+      action: "USER_UPDATED",
+      entity: "User",
+      entityId: id,
+    });
+    return updated;
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, actorId: string): Promise<void> {
     await this.requireUser(id);
     await this.users.delete(id);
+    await auditLogService.record({
+      actorId,
+      action: "USER_DELETED",
+      entity: "User",
+      entityId: id,
+    });
   }
 
   private async requireUser(id: string): Promise<UserRecord> {

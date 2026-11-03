@@ -1,5 +1,7 @@
 import { hashPassword, signAccessToken, verifyPassword } from "../../infrastructure/security";
 import { AppError } from "../../shared/errors";
+import { auditLogService } from "../audit-logs/audit-logs.service";
+import { notificationService } from "../notifications/notifications.service";
 import { toUserDto } from "../users/users.mapper";
 import { PrismaUserRepository } from "../users/users.repository";
 import { usersService } from "../users/users.service";
@@ -50,6 +52,17 @@ export class AuthService {
 
     const passwordHash = await hashPassword(input.newPassword);
     await this.users.updatePassword(userId, passwordHash);
+    await auditLogService.record({
+      actorId: userId,
+      action: "PASSWORD_CHANGED",
+      entity: "User",
+      entityId: userId,
+    });
+    await notificationService.notify({
+      userId,
+      title: "Password changed",
+      message: "Your password was changed.",
+    });
     return "Password changed successfully";
   }
 

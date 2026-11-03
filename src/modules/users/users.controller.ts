@@ -4,10 +4,17 @@ import { sendData, sendPage } from "../../shared/http";
 import { createUserSchema, updateUserSchema, userIdParamSchema, userListQuerySchema } from "./users.schema";
 import { usersService } from "./users.service";
 
+function actorId(req: Request): string {
+  if (!req.auth) {
+    throw new AppError("Unauthorized", 401);
+  }
+  return req.auth.id;
+}
+
 export class UsersController {
   async create(req: Request, res: Response): Promise<void> {
     const body = createUserSchema.parse(req.body);
-    const data = await usersService.create(body);
+    const data = await usersService.create(body, actorId(req));
     sendData(res, data, 201);
   }
 
@@ -34,13 +41,13 @@ export class UsersController {
   async update(req: Request, res: Response): Promise<void> {
     const params = userIdParamSchema.parse(req.params);
     const body = updateUserSchema.parse(req.body);
-    const data = await usersService.update(params.id, body);
+    const data = await usersService.update(params.id, body, actorId(req));
     sendData(res, data);
   }
 
   async remove(req: Request, res: Response): Promise<void> {
     const params = userIdParamSchema.parse(req.params);
-    await usersService.remove(params.id);
+    await usersService.remove(params.id, actorId(req));
     res.status(204).send();
   }
 }

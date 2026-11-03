@@ -28,6 +28,34 @@ const options: swaggerJsdoc.Options = {
         name: "Users",
         description: "User records",
       },
+      {
+        name: "ResourceTypes",
+        description: "Resource categories",
+      },
+      {
+        name: "Resources",
+        description: "Bookable resources",
+      },
+      {
+        name: "Availability",
+        description: "Open and booked slots",
+      },
+      {
+        name: "Bookings",
+        description: "Resource bookings",
+      },
+      {
+        name: "Dashboard",
+        description: "Summary counts",
+      },
+      {
+        name: "AuditLogs",
+        description: "System action history",
+      },
+      {
+        name: "Notifications",
+        description: "User notifications",
+      },
     ],
     components: {
       securitySchemes: {

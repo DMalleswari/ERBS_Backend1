@@ -20,6 +20,14 @@ export const paginationQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
+export const queryBooleanSchema = z
+  .union([z.enum(["true", "false"]), z.boolean()])
+  .optional()
+  .transform((value) => {
+    if (value === undefined) return undefined;
+    return value === true || value === "true";
+  });
+
 export function formatZodError(error: ZodError) {
   return error.issues.map((issue) => ({
     path: issue.path.join(".") || "request",
