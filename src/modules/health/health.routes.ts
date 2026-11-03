@@ -9,10 +9,12 @@ import { healthController } from "./health.controller";
  *     tags:
  *       - Health
  *     summary: Health check
- *     description: Returns service status, uptime, and current timestamp.
+ *     description: Returns service status, database status, uptime, environment, and timestamp.
  *     responses:
  *       200:
- *         description: Service is healthy
+ *         description: Service and database are healthy
+ *       503:
+ *         description: Database is unavailable
  *         content:
  *           application/json:
  *             schema:
@@ -30,6 +32,12 @@ import { healthController } from "./health.controller";
  *                     service:
  *                       type: string
  *                       example: erbs-backend
+ *                     database:
+ *                       type: string
+ *                       example: up
+ *                     environment:
+ *                       type: string
+ *                       example: development
  *                     uptime:
  *                       type: number
  *                       example: 12.34
@@ -43,7 +51,7 @@ const healthRoutes = Router();
 healthRoutes.get(
   "/",
   asyncHandler(async (req, res) => {
-    healthController.check(req, res);
+    await healthController.check(req, res);
   }),
 );
 

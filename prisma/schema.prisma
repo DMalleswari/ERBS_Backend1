@@ -7,10 +7,88 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  passwordHash  String
+  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(3)
+  bookings      Booking[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+}
+
+model ResourceType {
+  id          String     @id @default(uuid())
+  code        String     @unique
+  name        String
+  description String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @db.Timestamptz(3)
+  resources   Resource[]
+}
+
+model Resource {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  resourceTypeId String
+  resourceType   ResourceType @relation(fields: [resourceTypeId], references: [id])
+  capacity       Int
+  location       String
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @db.Timestamptz(3)
+  bookings       Booking[]
+
+  @@index([resourceTypeId])
+  @@index([isActive])
+}
+
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
+model Booking {
+  id         String        @id @default(uuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id])
+  resourceId String
+  resource   Resource      @relation(fields: [resourceId], references: [id])
+  startTime  DateTime      @db.Timestamptz(3)
+  endTime    DateTime      @db.Timestamptz(3)
+  status     BookingStatus @default(ACTIVE)
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime      @updatedAt @db.Timestamptz(3)
+
+  @@index([userId])
+  @@index([resourceId, status, startTime, endTime])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([entity, createdAt])
+  @@index([actorId])
+  @@index([action])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId, isRead, createdAt])
 }
