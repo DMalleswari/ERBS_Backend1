@@ -2,7 +2,13 @@ import type { Request, Response } from "express";
 import { sendData, sendMessage } from "../../shared/http";
 import { AppError } from "../../shared/errors";
 import { usersService } from "../users/users.service";
-import { changePasswordSchema, loginSchema, registerSchema } from "./auth.schema";
+import {
+  changePasswordSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from "./auth.schema";
 import { authService } from "./auth.service";
 
 export class AuthController {
@@ -32,6 +38,18 @@ export class AuthController {
     }
     const body = changePasswordSchema.parse(req.body);
     const message = await authService.changePassword(req.auth.id, body);
+    sendMessage(res, message);
+  }
+
+  async forgotPassword(req: Request, res: Response): Promise<void> {
+    const body = forgotPasswordSchema.parse(req.body);
+    const message = await authService.forgotPassword(body);
+    sendMessage(res, message);
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<void> {
+    const body = resetPasswordSchema.parse(req.body);
+    const message = await authService.resetPassword(body);
     sendMessage(res, message);
   }
 

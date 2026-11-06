@@ -18,6 +18,25 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 characters"),
   JWT_EXPIRES_IN: z.string().min(1).default("1d"),
   CORS_ORIGIN: z.string().min(1).default("http://localhost:5173"),
+  FRONTEND_URL: z.string().url().default("http://localhost:5173"),
+  PASSWORD_RESET_EXPIRES_MINUTES: z.coerce.number().int().positive().default(30),
+  SMTP_HOST: z.string().min(1).optional(),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_SECURE: z
+    .union([z.enum(["true", "false"]), z.boolean()])
+    .optional()
+    .transform((value) => value === true || value === "true"),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
+  // Set false on Windows when antivirus/proxy injects a self-signed cert (dev only).
+  SMTP_TLS_REJECT_UNAUTHORIZED: z
+    .union([z.enum(["true", "false"]), z.boolean()])
+    .optional()
+    .transform((value) => {
+      if (value === undefined) return true;
+      return value === true || value === "true";
+    }),
 });
 
 const parsed = envSchema.safeParse(process.env);
