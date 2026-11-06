@@ -7,15 +7,19 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  name          String
-  email         String         @unique
-  passwordHash  String
-  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
-  updatedAt     DateTime       @updatedAt @db.Timestamptz(3)
-  bookings      Booking[]
-  notifications Notification[]
-  auditLogs     AuditLog[]
+  id                   String         @id @default(uuid())
+  name                 String
+  email                String         @unique
+  passwordHash         String
+  passwordResetToken   String?
+  passwordResetExpires DateTime?      @db.Timestamptz(3)
+  createdAt            DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
+  bookings             Booking[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+
+  @@index([passwordResetToken])
 }
 
 model ResourceType {

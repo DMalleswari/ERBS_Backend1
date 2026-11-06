@@ -21,6 +21,11 @@ export type AuthUserRecord = UserRecord & {
   passwordHash: string;
 };
 
+export type PasswordResetUserRecord = AuthUserRecord & {
+  passwordResetToken: string | null;
+  passwordResetExpires: Date | null;
+};
+
 export type UserListFilters = {
   skip: number;
   take: number;
@@ -36,8 +41,11 @@ export type UserRepository = {
   findByEmail(email: string): Promise<UserRecord | null>;
   findAuthById(id: string): Promise<AuthUserRecord | null>;
   findAuthByEmail(email: string): Promise<AuthUserRecord | null>;
+  findByPasswordResetToken(tokenHash: string): Promise<PasswordResetUserRecord | null>;
+  setPasswordResetToken(id: string, tokenHash: string, expiresAt: Date): Promise<void>;
   update(id: string, input: UpdateUserInput): Promise<UserRecord>;
   updatePassword(id: string, passwordHash: string): Promise<void>;
+  resetPassword(id: string, passwordHash: string): Promise<void>;
   delete(id: string): Promise<void>;
 };
 
@@ -113,6 +121,32 @@ export class PrismaUserRepository implements UserRepository {
     });
   }
 
+  async findByPasswordResetToken(tokenHash: string): Promise<PasswordResetUserRecord | null> {
+    return prisma.user.findFirst({
+      where: { passwordResetToken: tokenHash },
+      select: {
+        ...publicUserSelect,
+        passwordHash: true,
+        passwordResetToken: true,
+        passwordResetExpires: true,
+      },
+    });
+  }
+
+  async setPasswordResetToken(id: string, tokenHash: string, expiresAt: Date): Promise<void> {
+    try {
+      await prisma.user.update({
+        where: { id },
+        data: {
+          passwordResetToken: tokenHash,
+          passwordResetExpires: expiresAt,
+        },
+      });
+    } catch (error) {
+      rethrowPrismaError(error);
+    }
+  }
+
   async update(id: string, input: UpdateUserInput): Promise<UserRecord> {
     try {
       return await prisma.user.update({
@@ -133,6 +167,21 @@ export class PrismaUserRepository implements UserRepository {
       await prisma.user.update({
         where: { id },
         data: { passwordHash },
+      });
+    } catch (error) {
+      rethrowPrismaError(error);
+    }
+  }
+
+  async resetPassword(id: string, passwordHash: string): Promise<void> {
+    try {
+      await prisma.user.update({
+        where: { id },
+        data: {
+          passwordHash,
+          passwordResetToken: null,
+          passwordResetExpires: null,
+        },
       });
     } catch (error) {
       rethrowPrismaError(error);
